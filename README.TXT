@@ -12,4 +12,4 @@ Then combines with the dates for display with respective to dates.
 lowerBand: It take 3 argument stock prices, moving average (for 20 days window), standardDeviation (for 20 days respective stock prices). It subtract the average - (standardDeviation).
 Then combines with the dates for display with respective to dates.
 
-Small Methods like map, reduce are used in the es6 format.
+Small Methods like map, reduce are used in the es6 format(using arrow functions).
