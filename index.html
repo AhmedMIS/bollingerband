@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Infront code-test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.13.0/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.6.0/Chart.min.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function(event) {
+        getDataSet("data/Oslo_STL.json", function(dataSet) {
+          if (dataSet) {
+            renderChart("STL", JSON.parse(dataSet));
+          }
+        });
+        getDataSet("data/Stockholm_ABB.json", function(dataSet) {
+          if (dataSet) {
+            renderChart("ABB", JSON.parse(dataSet));
+          }
+        });
+      });
+
+      function renderChart(id, dataSet) {
+        var data = dataSet.map(function(item, index, array) {
+          return {
+            x: new Date(item.date).toISOString(),
+            y: item.last
+          };
+        });
+
+        let numData = data.map(data => data.y);
+        var value = simpleMovingAverage(numData, 20);
+        let Sd = value.map(val => val.sd);
+        let averageValues = value.map(val => val.value);
+        var upperB = upparBand(Sd, averageValues, data);
+        var lowerB = lowerBand(Sd, averageValues, data);
+
+        var simpleAverage = data.map((e, i) => {
+          return {
+            x: e.x,
+            y: averageValues[i]
+          };
+        });
+
+        var context = document.querySelector("#" + id).getContext("2d");
+        var stockChart = new Chart(context, {
+          type: "line",
+          data: {
+            datasets: [
+              {
+                label: id,
+                fill: false,
+                data: data,
+                borderWidth: 1,
+                pointRadius: 0,
+                borderColor: "#1a5ecc"
+              },
+
+              {
+                label: "Simple Average",
+                fill: false,
+                data: simpleAverage,
+                borderWidth: 1,
+                pointRadius: 0,
+                borderColor: "#FFFF00"
+              },
+              {
+                label: "Uppar Band",
+                fill: false,
+                data: upperB,
+                borderWidth: 1,
+                pointRadius: 0,
+                borderColor: "#228B22"
+              },
+              {
+                label: "Lower Band",
+                fill: false,
+                data: lowerB,
+                borderWidth: 1,
+                pointRadius: -1,
+                borderColor: "#FF0000"
+              }
+            ]
+          },
+          options: {
+            responsive: false,
+            scales: {
+              xAxes: [
+                {
+                  type: "time",
+                  display: true
+                }
+              ]
+            }
+          }
+        });
+      }
+
+      function getDataSet(url, callback) {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", url);
+        xhr.onload = function() {
+          if (xhr.status == 200) {
+            callback(xhr.responseText);
+          } else {
+            callback(null);
+          }
+        };
+        xhr.send();
+      }
+
+      function sumAll(data) {
+        var sum = data.reduce((acc, index) => {
+          return acc + index;
+        }, 0);
+
+        return sum;
+      }
+
+      function standardDeviation(data) {
+        let mean = sumAll(data) / data.length;
+        let varience = data.map(x => x - mean).map(x => x * x);
+        let sumVarience = sumAll(varience) / data.length - 1;
+        let SD = Math.sqrt(sumVarience);
+        return SD;
+      }
+
+      function upparBand(Sd, values, data) {
+        let upparB = data.map((val, index, arr, temp) => {
+          temp = parseFloat(values[index]) + parseFloat(Sd[index]);
+          return {
+            x: val.x,
+            y: temp
+          };
+        });
+
+        return upparB;
+      }
+
+      function lowerBand(Sd, values, data) {
+        let lowerB = data.map((val, index, temp) => {
+          temp = parseFloat(values[index]) - parseFloat(Sd[index]);
+          return {
+            x: val.x,
+            y: temp
+          };
+        });
+
+        return lowerB;
+      }
+
+      function Average(data) {
+        var average = sumAll(data) / data.length;
+        return parseFloat(average).toFixed(3);
+      }
+
+      function simpleMovingAverage(data, window) {
+        var values = data.map((value, index, arr, sd) => {
+          if (index < window) {
+            value = null;
+          } else {
+            value = arr.slice(index - window, index);
+            sd = standardDeviation(value);
+            value = Average(value);
+          }
+          return {
+            value: value,
+            sd: sd
+          };
+        });
+
+        return values;
+      }
+    </script>
+  </head>
+  <body>
+    <canvas id="STL" width="900" height="450"></canvas>
+    <canvas id="ABB" width="900" height="450"></canvas>
+  </body>
+</html>
