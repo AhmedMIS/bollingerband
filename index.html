@@ -29,11 +29,11 @@
         });
 
         let numData = data.map(data => data.y);
-        var value = simpleMovingAverage(numData, 20);
+        let value = simpleMovingAverage(numData, 20);
         let Sd = value.map(val => val.sd);
         let averageValues = value.map(val => val.value);
-        var upperB = upparBand(Sd, averageValues, data);
-        var lowerB = lowerBand(Sd, averageValues, data);
+        let upperB = bolingerBands(Sd, averageValues, data, "add");
+        let lowerB = bolingerBands(Sd, averageValues, data, "subtract");
 
         var simpleAverage = data.map((e, i) => {
           return {
@@ -110,7 +110,7 @@
       }
 
       function sumAll(data) {
-        var sum = data.reduce((acc, index) => {
+        let sum = data.reduce((acc, index) => {
           return acc + index;
         }, 0);
 
@@ -125,37 +125,33 @@
         return SD;
       }
 
-      function upparBand(Sd, values, data) {
-        let upparB = data.map((val, index, arr, temp) => {
-          temp = parseFloat(values[index]) + parseFloat(Sd[index]);
+      function bolingerBands(Sd, values, data, type) {
+        let bands = data.map((val, index, arr, temp) => {
+          if (type === "add") {
+            temp = parseFloat(values[index]) + parseFloat(Sd[index]);
+          } else if (type === "subtract") {
+            temp = parseFloat(values[index]) - parseFloat(Sd[index]);
+          } else {
+            console.log(
+              "Please the right argument,for upparband use add, for lowerband use subtract"
+            );
+          }
           return {
             x: val.x,
             y: temp
           };
         });
 
-        return upparB;
-      }
-
-      function lowerBand(Sd, values, data) {
-        let lowerB = data.map((val, index, temp) => {
-          temp = parseFloat(values[index]) - parseFloat(Sd[index]);
-          return {
-            x: val.x,
-            y: temp
-          };
-        });
-
-        return lowerB;
+        return bands;
       }
 
       function Average(data) {
-        var average = sumAll(data) / data.length;
+        let average = sumAll(data) / data.length;
         return parseFloat(average).toFixed(3);
       }
 
       function simpleMovingAverage(data, window) {
-        var values = data.map((value, index, arr, sd) => {
+        let values = data.map((value, index, arr, sd) => {
           if (index < window) {
             value = null;
           } else {
