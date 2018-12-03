@@ -32,8 +32,8 @@
         let value = simpleMovingAverage(numData, 20);
         let Sd = value.map(val => val.sd);
         let averageValues = value.map(val => val.value);
-        let upperB = bolingerBands(Sd, averageValues, data, "add");
-        let lowerB = bolingerBands(Sd, averageValues, data, "subtract");
+        let upperB = bolingerBands(Sd, averageValues, data, "uppar");
+        let lowerB = bolingerBands(Sd, averageValues, data, "lower");
 
         var simpleAverage = data.map((e, i) => {
           return {
@@ -127,9 +127,9 @@
 
       function bolingerBands(Sd, values, data, type) {
         let bands = data.map((val, index, arr, temp) => {
-          if (type === "add") {
+          if (type === "uppar") {
             temp = parseFloat(values[index]) + parseFloat(Sd[index]);
-          } else if (type === "subtract") {
+          } else if (type === "lower") {
             temp = parseFloat(values[index]) - parseFloat(Sd[index]);
           } else {
             console.log(
